@@ -1,0 +1,200 @@
+// CMD3DEngine.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+
+#include <Windows.h>
+#include <string>
+#include <chrono>
+#include <vector>
+#include <tuple>
+#include <algorithm>
+
+#define SCREEN_WIDTH 120
+#define SCREEN_HEIGHT 40
+
+float fPlayerX = 8.0f;
+float fPlayerY = 8.0f;
+float fPlayerA = 0.0f;
+float fPlayerFOV = 3.14159f / 4.0f;
+float fRayDepth = 16.0f;
+float fPlayerRotateStep = 0.5f;
+float fPlayerMovementStep = 5.0f;
+
+const int nMapHeight = 16;
+const int nMapWidth = 16;
+
+int main() 
+{
+    // screen buffer init
+    wchar_t* pScreen = new wchar_t[SCREEN_WIDTH * SCREEN_HEIGHT];
+    HANDLE hConsole = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
+    SetConsoleActiveScreenBuffer(hConsole);
+    DWORD dwBytesWritten = 0;
+
+    // map init
+    std::wstring world;
+    world += L"################";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....###.......#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#....#.........#";
+    world += L"#..............#";
+    world += L"#..............#";
+    world += L"#..............#";
+    world += L"################";
+
+    // timer for calculating fps
+    auto tp1 = std::chrono::system_clock::now();
+    auto tp2 = std::chrono::system_clock::now();
+
+    // game loop
+    for (;;) {
+        // time frame
+        tp2 = std::chrono::system_clock::now();
+        std::chrono::duration<float> elapsedTime = tp2 - tp1;
+        tp1 = tp2;
+        float fElapsedTime = elapsedTime.count();
+
+        // handle controls
+        if (GetAsyncKeyState((unsigned short)'A') & 0x8000) {
+            fPlayerA -= fPlayerRotateStep * fElapsedTime;
+        }
+        if (GetAsyncKeyState((unsigned short)'D') & 0x8000) {
+            fPlayerA += fPlayerRotateStep * fElapsedTime;
+        }
+        if (GetAsyncKeyState((unsigned short)'W') & 0x8000) {
+            fPlayerX += sinf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+            fPlayerY += cosf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+
+            // check wall collision
+            if (map[(int)fPlayerY * nMapWidth + (int)fPlayerX] == '#') {
+                fPlayerX -= sinf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+                fPlayerY -= cosf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+            }
+        }
+        if (GetAsyncKeyState((unsigned short)'S') & 0x8000) {
+            fPlayerX -= sinf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+            fPlayerY -= cosf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+
+            // check wall collision
+            if (map[(int)fPlayerY * nMapWidth + (int)fPlayerX] == '#') {
+                fPlayerX += sinf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+                fPlayerY += cosf(fPlayerA) * fPlayerMovementStep * fElapsedTime;
+            }
+        }
+
+        // cast rays
+        for (int x = 0; x < SCREEN_WIDTH; ++x) {
+            float fRayAngle = (fPlayerA - fPlayerFOV / 2.0f) + ((float)x / (float)SCREEN_WIDTH) * fPlayerFOV;
+
+            float fDistanceToWall = 0.0f;
+            bool bHitWall = false;
+            bool bHitBoundary = false;
+
+            // unit vector for camera direction
+            float fCameraX = sinf(fRayAngle);
+            float fCameraY = cosf(fRayAngle);
+
+            while (!bHitWall && fDistanceToWall < fRayDepth) {
+                fDistanceToWall += 0.1f;
+                int nTestX = (int)(fPlayerX + fCameraX * fDistanceToWall);
+                int nTestY = (int)(fPlayerY + fCameraY * fDistanceToWall);
+
+                // test if ray out of bounds
+                if (nTestX < 0 || nTestX >= nMapWidth || nTestY < 0 || nTestY >= nMapHeight) {
+                    bHitWall = true;
+                    fDistanceToWall = fRayDepth;
+                } else {
+                    if (map[nTestY * nMapWidth + nTestX] == '#') {   // test if ray hit wall/boundary
+                        bHitWall = true;
+
+                        std::vector<std::tuple<float, float>> boundaryData;    // (distance, dot product)
+                        for (int i = 0; i < 2; ++i) {
+                            for (int j = 0; j < 2; ++j) {
+                                float vy = (float)nTestY + i - fPlayerY;
+                                float vx = (float)nTestX + j - fPlayerX;
+                                float magnitude = sqrt(vx * vx + vy * vy);
+                                float dot = (fCameraX * vx / magnitude) + (fCameraY * vy / magnitude);
+                                boundaryData.push_back(std::make_tuple(magnitude, dot));
+                            }
+                        }
+
+                        // sort pairs from closest to farthest
+                        std::sort(boundaryData.begin(), boundaryData.end(),
+                            [](const std::tuple<float, float>& a, const std::tuple<float, float>& b) {
+                                return std::get<0>(a) < std::get<0>(b);
+                            });
+
+                        float fBoundA = 0.01;
+                        if (acos(std::get<1>(boundaryData[0])) < fBoundA) {
+                            bHitBoundary = true;
+                        }
+                        if (acos(std::get<1>(boundaryData[1])) < fBoundA) {
+                            bHitBoundary = true;
+                        }
+                    }
+                }
+            }
+
+            // calculate distance to floor and ceiling
+            int nCeiling = (float)(SCREEN_HEIGHT / 2.0f) - SCREEN_HEIGHT / ((float)fDistanceToWall);
+            int nFloor = SCREEN_HEIGHT - nCeiling;
+            
+            // shade walls based on distance
+            short nShade = ' ';
+            if (fDistanceToWall <= fRayDepth / 4.0f)        nShade = 0x2588;
+            else if (fDistanceToWall < fRayDepth / 3.0f)    nShade = 0x2593;
+            else if (fDistanceToWall < fRayDepth / 2.0f)    nShade = 0x2592;
+            else if (fDistanceToWall < fRayDepth)           nShade = 0x2591;
+            else                                            nShade = ' ';
+
+            // mark wall boundaries
+            if (bHitBoundary) {
+                nShade = ' ';
+            }
+
+            // draw walls
+            for (int y = 0; y < SCREEN_HEIGHT; ++y) {
+                if (y < nCeiling) {  // ceiling
+                    pScreen[y * SCREEN_WIDTH + x] = ' ';
+                } else if (y > nCeiling && y <= nFloor) { // wall
+                    pScreen[y * SCREEN_WIDTH + x] = nShade;
+                } else { // floor
+                    // shade floor based on distance
+                    short nFloorShade = ' ';
+                    float fFloorDistanceCoef = 1.0f - (((float)y - SCREEN_HEIGHT / 2.0f) / ((float)SCREEN_HEIGHT / 2.0f));
+                    if (fFloorDistanceCoef < 0.25f)      nFloorShade = '#';
+                    else if (fFloorDistanceCoef < 0.5f)  nFloorShade = '=';
+                    else if (fFloorDistanceCoef < 0.75f) nFloorShade = '.';
+                    else if (fFloorDistanceCoef < 0.9f)  nFloorShade = '-';
+                    pScreen[y * SCREEN_WIDTH + x] = nFloorShade;
+                }
+            }
+        }
+
+        // show stats
+        swprintf_s(pScreen, 40, L"FPS:%3.2f, X:%3.2f, Y:%3.2f, A:%3.2f", 1.0 / fElapsedTime, fPlayerX, fPlayerY, fPlayerA);
+
+        // show minimap
+        for (int mapX = 0; mapX < nMapWidth; ++mapX) {
+            for (int mapY = 0; mapY < nMapHeight; ++mapY) {
+                pScreen[(mapY + 1) * SCREEN_WIDTH + mapX] = map[mapY * nMapWidth + mapX];
+            }
+        }
+
+        // show player on minimap
+        pScreen[((int)fPlayerY + 1) * SCREEN_WIDTH + (int)fPlayerX] = '@';
+
+        // draw frame
+        pScreen[SCREEN_WIDTH * SCREEN_HEIGHT - 1] = '\0';
+        WriteConsoleOutputCharacter(hConsole, pScreen, SCREEN_WIDTH * SCREEN_HEIGHT, { 0, 0 }, &dwBytesWritten);
+    }
+    
+    return 0;
+}
