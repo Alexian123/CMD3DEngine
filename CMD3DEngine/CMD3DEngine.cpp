@@ -9,20 +9,6 @@
 #include "Map.h"
 #include "Player.h"
 
-#define SCREEN_WIDTH 120
-#define SCREEN_HEIGHT 40
-
-float fPlayerX = 8.0f;
-float fPlayerY = 8.0f;
-float fPlayerA = 0.0f;
-float fPlayerFOV = 3.14159f / 4.0f;
-float fRayDepth = 16.0f;
-float fPlayerRotateStep = 0.5f;
-float fPlayerMovementStep = 5.0f;
-
-const int nMapHeight = 16;
-const int nMapWidth = 16;
-
 using namespace CMD_3D_ENGINE;
 
 int main() 
