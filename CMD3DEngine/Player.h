@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Entity.h"
-#include "KeyboardHandler.h"
+#include "IOHandler.h"
 #include "Map.h"
 
 namespace CMD_3D_ENGINE
@@ -12,10 +12,10 @@ namespace CMD_3D_ENGINE
 		const Map& map;
 	public:
 		Player(const Map &map, float x, float y, float viewAngle);
-		void handleControls(const KeyboardHandler& khand, float elapsedTime);
+		void handleControls(IOHandler& ioh, float elapsedTime);
 	private:
-		void move(const KeyboardHandler& khand, float elapsedTime);
-		void rotate(const KeyboardHandler& khand, float elapsedTime);
+		void move(const IOHandler& ioh, float elapsedTime);
+		void rotate(const IOHandler& ioh, float elapsedTime);
 	};
 }
 

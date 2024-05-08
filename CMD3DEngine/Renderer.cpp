@@ -1,4 +1,4 @@
-#include "ScreenRenderer.h"
+#include "Renderer.h"
 
 #include <stdexcept>
 #include <vector>
@@ -6,72 +6,54 @@
 
 using namespace CMD_3D_ENGINE;
 
-ScreenRenderer::ScreenRenderer(int screenWidth, int screenHeight)
-	: screenWidth(screenWidth), screenHeight(screenHeight), camera(0.0f, 0.0f)
+Renderer::Renderer(IOHandler& ioh) : ioh(ioh), camera(0.0f, 0.0f)
 {
-	if (screenWidth < 0 || screenHeight < 0) {
-		throw std::out_of_range("Screen dimensions out of bounds");
-	}
-	screen = std::make_unique<wchar_t[]>(screenWidth * screenHeight);
-	console = CreateConsoleScreenBuffer(GENERIC_READ | GENERIC_WRITE, 0, nullptr, CONSOLE_TEXTMODE_BUFFER, nullptr);
-	SetConsoleActiveScreenBuffer(console);
-	bytesWritten = 0;
 }
 
-void ScreenRenderer::renderScene(const Player& player, const Map& map, float elapsedTime)
+void Renderer::renderScene(const Player& player, const Map& map, float elapsedTime)
 {
     castRays(player, map);
-    drawStats(player, elapsedTime);
-    drawMinimap(map, player.getPosition());
-    drawFrame();
+    showMinimap(map, player.getPosition());
+    updateWindowTitle(player, elapsedTime);
+    ioh.updateScreenBuffer();
 }
 
-int ScreenRenderer::getScreenWidth() const
-{
-	return screenWidth;
-}
-
-int ScreenRenderer::getSceenHeight() const
-{
-	return screenHeight;
-}
-
-float ScreenRenderer::getRayDepth() const
+float Renderer::getRayDepth() const
 {
 	return rayDepth;
 }
 
-float ScreenRenderer::getBoundaryAngle() const
+float Renderer::getBoundaryAngle() const
 {
     return boundaryAngle;
 }
 
-float ScreenRenderer::getDistanceToWallIncrement() const
+float Renderer::getDistanceToWallIncrement() const
 {
 	return distanceToWallIncrement;
 }
 
-void ScreenRenderer::setRayDepth(float rayDepth)
+void Renderer::setRayDepth(float rayDepth)
 {
 	this->rayDepth = rayDepth;
 }
 
-void ScreenRenderer::setBoundaryAngle(float boundaryAngle)
+void Renderer::setBoundaryAngle(float boundaryAngle)
 {
     this->boundaryAngle = boundaryAngle;
 }
 
-void ScreenRenderer::setDistanceToWallIncrement(float distanceToWallIncrement)
+void Renderer::setDistanceToWallIncrement(float distanceToWallIncrement)
 {
 	this->distanceToWallIncrement = distanceToWallIncrement;
 }
 
-void ScreenRenderer::castRays(const Player& player, const Map& map)
+void Renderer::castRays(const Player& player, const Map& map)
 {
     // cast rays
-    for (int x = 0; x < screenWidth; ++x) {
+    for (int x = 0; x < ioh.getScreenWidth(); ++x) {
         float rayAngle = (player.getViewAngle() - player.getFov() / 2.0f) 
-            + ((float)x / (float)screenWidth) * player.getFov();
+            + ((float)x / (float)ioh.getScreenWidth()) * player.getFov();
 
         distanceToWall = 0.0f;
         hitWall = false;
@@ -84,11 +66,11 @@ void ScreenRenderer::castRays(const Player& player, const Map& map)
         // check if ray hit anything
         checkHit(player.getPosition(), map);
 
-        drawLevel(x);
+        renderLevel(x);
     }
 }
 
-void ScreenRenderer::checkHit(const Vec2D& playerPos, const Map& map)
+void Renderer::checkHit(const Vec2D& playerPos, const Map& map)
 {
     while (!hitWall && distanceToWall < rayDepth) {
         distanceToWall += distanceToWallIncrement;
@@ -109,7 +91,7 @@ void ScreenRenderer::checkHit(const Vec2D& playerPos, const Map& map)
     }
 }
 
-void ScreenRenderer::checkBoundary(int rayX, int rayY, const Vec2D& playerPos)
+void Renderer::checkBoundary(int rayX, int rayY, const Vec2D& playerPos)
 {
     static constexpr int CORNERS_PER_SIDE = 2;
     std::vector<Vec2D> boundaryData;
@@ -131,23 +113,19 @@ void ScreenRenderer::checkBoundary(int rayX, int rayY, const Vec2D& playerPos)
         });
 
     // check if the ray hit any of the 2 corners on the side of the block facing the player
-    //for (int i = 0; i < CORNERS_PER_SIDE; ++i) {
-    if (acos(boundaryData[0].getY()) < boundaryAngle) {
-        hitBoundary = true;
-        //break;
+    for (int i = 0; i < CORNERS_PER_SIDE; ++i) {
+        if (acos(boundaryData[i].getY()) < boundaryAngle) {
+            hitBoundary = true;
+            break;
+        }
     }
-    if (acos(boundaryData[1].getY()) < boundaryAngle) {
-        hitBoundary = true;
-        //break;
-    }
-    //}
 }
 
-void ScreenRenderer::drawLevel(int x)
+void Renderer::renderLevel(int x)
 {
     // calculate distance to floor and ceiling
-    int ceilingY = (int)((float)(screenHeight / 2.0f) - screenHeight / ((float)distanceToWall));
-    int floorY = screenHeight - ceilingY;
+    int ceilingY = (int)((float)(ioh.getScreenHeight() / 2.0f) - ioh.getScreenHeight() / ((float)distanceToWall));
+    int floorY = ioh.getScreenHeight() - ceilingY;
 
     short shade = ' ';
     if (hitBoundary) { // mark wall boundaries
@@ -160,46 +138,43 @@ void ScreenRenderer::drawLevel(int x)
         else                                          shade = ' ';
     }
                                              
-    for (int y = 0; y < screenHeight; ++y) {
+    for (int y = 0; y < ioh.getScreenHeight(); ++y) {
         if (y < ceilingY) {  // ceiling
-            screen[y * screenWidth + x] = ' ';
+            ioh.draw(x, y, ' ');
         }
         else if (y > ceilingY && y <= floorY) { // wall
-            screen[y * screenWidth + x] = shade;
+            ioh.draw(x, y, shade);
         }
         else { // floor
             // shade floor based on distance
             short floorShade = ' ';
-            float floorDistanceCoef = 1.0f - (((float)y - screenHeight / 2.0f) / ((float)screenHeight / 2.0f));
+            float floorDistanceCoef = 1.0f - (((float)y - ioh.getScreenHeight() / 2.0f) / ((float)ioh.getScreenHeight() / 2.0f));
             if (floorDistanceCoef < 0.25f)      floorShade = '#';
             else if (floorDistanceCoef < 0.5f)  floorShade = '=';
             else if (floorDistanceCoef < 0.75f) floorShade = '.';
             else if (floorDistanceCoef < 0.9f)  floorShade = '-';
-            screen[y * screenWidth + x] = floorShade;
+            ioh.draw(x, y, floorShade);
         }
     }
 }
 
-void ScreenRenderer::drawStats(const Player& player, float elapsedTime)
-{
-	swprintf_s(screen.get(), 40, L"FPS:%3.2f, X:%3.2f, Y:%3.2f, A:%3.2f",
-		1.0 / elapsedTime, player.getPosition().getX(), player.getPosition().getY(), player.getViewAngle());
-}
-
-void ScreenRenderer::drawMinimap(const Map& map, const Vec2D& playerPos)
+void Renderer::showMinimap(const Map& map, const Vec2D& playerPos)
 {
 	for (int x = 0; x < map.getWidth(); ++x) {
 		for (int y = 0; y < map.getHeight(); ++y) {
-			screen[(y + 1) * screenWidth + x] = map.getCell(x, y);
+            ioh.draw(x, y, map.getCell(x, y));
 		}
 	}
 
 	// show player on minimap
-	screen[((int)playerPos.getY() + 1) * screenWidth + (int)playerPos.getX()] = map.getPlayerSymbol();
+    ioh.draw(playerPos.getX(), playerPos.getY(), map.getPlayerSymbol());
 }
 
-void ScreenRenderer::drawFrame()
+void Renderer::updateWindowTitle(const Player& player, float elapsedTime)
 {
-	screen[screenWidth * screenHeight - 1] = '\0';	// end of screen buffer
-	WriteConsoleOutputCharacter(console, screen.get(), screenWidth * screenHeight, {0, 0}, &bytesWritten);
+    static constexpr int MAX_LEN = 256; 
+    wchar_t title[MAX_LEN];
+    swprintf_s(title, MAX_LEN, L"CMD3DEngine - STATS: FPS=%3.2f, X=%3.2f, Y=%3.2f, A=%3.2f", 1.0 / elapsedTime,
+        player.getPosition().getX(), player.getPosition().getY(), player.getViewAngle());
+    ioh.setWindowTitle(title);
 }

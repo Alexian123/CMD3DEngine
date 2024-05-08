@@ -3,8 +3,8 @@
 
 #include <string>
 
-#include "ScreenRenderer.h"
-#include "KeyboardHandler.h"
+#include "IOHandler.h"
+#include "Renderer.h"
 #include "FrameTimer.h"
 #include "Map.h"
 #include "Player.h"
@@ -13,11 +13,11 @@ using namespace CMD_3D_ENGINE;
 
 int main() 
 {
-    // renderer init
-    ScreenRenderer renderer(120, 40);
+    // IO init
+    IOHandler ioh(320, 80, 4, 8);
 
-    // keyboard init
-    KeyboardHandler khand;
+    // renderer init
+    Renderer renderer(ioh);
 
     // timer init
     FrameTimer ft;
@@ -48,7 +48,7 @@ int main()
     // game loop
     for (;;) {
         float elapsedTime = ft.update();
-        player.handleControls(khand, elapsedTime);
+        player.handleControls(ioh, elapsedTime);
         renderer.renderScene(player, map, elapsedTime);
     }
     

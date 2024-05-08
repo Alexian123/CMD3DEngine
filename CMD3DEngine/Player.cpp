@@ -6,15 +6,16 @@ Player::Player(const Map& map, float x, float y, float viewAngle) : Entity(x, y,
 {
 }
 
-void Player::handleControls(const KeyboardHandler& khand, float elapsedTime)
+void Player::handleControls(IOHandler& ioh, float elapsedTime)
 {
-    move(khand, elapsedTime);
-    rotate(khand, elapsedTime);
+    ioh.readInput();
+    move(ioh, elapsedTime);
+    rotate(ioh, elapsedTime);
 }
 
-void Player::move(const KeyboardHandler& khand, float elapsedTime)
+void Player::move(const IOHandler& ioh, float elapsedTime)
 {
-    if (khand.isKeyPressed(W)) {    // forward
+    if (ioh.getKeyState(W_KEY).held) {    // forward
         Vec2D offset(sinf(viewAngle) * movementSpeed * elapsedTime, cosf(viewAngle) * movementSpeed * elapsedTime);
         position += offset;
 
@@ -23,7 +24,7 @@ void Player::move(const KeyboardHandler& khand, float elapsedTime)
             position -= offset;
         }
     }
-    if (khand.isKeyPressed(A)) {    // left
+    if (ioh.getKeyState(A_KEY).held) {    // left
         Vec2D offset((-1.0f) * cosf(viewAngle) * strafingSpeed * elapsedTime, sinf(viewAngle) * strafingSpeed * elapsedTime);
         position += offset;
 
@@ -32,7 +33,7 @@ void Player::move(const KeyboardHandler& khand, float elapsedTime)
             position -= offset;
         }
     }
-    if (khand.isKeyPressed(S)) { // backwards
+    if (ioh.getKeyState(S_KEY).held) { // backwards
         Vec2D offset(sinf(viewAngle) * movementSpeed * elapsedTime, cosf(viewAngle) * movementSpeed * elapsedTime);
         position -= offset;
 
@@ -41,7 +42,7 @@ void Player::move(const KeyboardHandler& khand, float elapsedTime)
             position += offset;
         }
     }
-    if (khand.isKeyPressed(D)) {    // right
+    if (ioh.getKeyState(D_KEY).held) {    // right
         Vec2D offset(cosf(viewAngle) * strafingSpeed * elapsedTime, (-1.0f) * sinf(viewAngle) * strafingSpeed * elapsedTime);
         position += offset;
 
@@ -52,12 +53,12 @@ void Player::move(const KeyboardHandler& khand, float elapsedTime)
     }
 }
 
-void Player::rotate(const KeyboardHandler& khand, float elapsedTime)
+void Player::rotate(const IOHandler& ih, float elapsedTime)
 {
-    if (khand.isKeyPressed(Q)) {
+    if (ih.getKeyState(Q_KEY).held) {
         viewAngle -= rotationSpeed * elapsedTime;
     }
-    if (khand.isKeyPressed(E)) {
+    if (ih.getKeyState(E_KEY).held) {
         viewAngle += rotationSpeed * elapsedTime;
     }
 }

@@ -3,22 +3,17 @@
 #include <Windows.h>
 #include <memory>
 
+#include "IOHandler.h"
 #include "Player.h"
 #include "Map.h"
 #include "FrameTimer.h"
 
 namespace CMD_3D_ENGINE
 {
-	class ScreenRenderer
+	class Renderer
 	{
 	private:
-		const int screenWidth;
-		const int screenHeight;
-
-		std::unique_ptr<wchar_t[]> screen;	// screen buffer
-		HANDLE console;
-		DWORD bytesWritten;
-		
+		IOHandler& ioh;
 		Vec2D camera;
 		float rayDepth = 16.0f;
 		float boundaryAngle = 0.01f;
@@ -27,13 +22,11 @@ namespace CMD_3D_ENGINE
 		bool hitWall = false;
 		bool hitBoundary = false;
 	public:
-		ScreenRenderer(int screenWidth, int screenHeight);
+		Renderer(IOHandler& ioh);
 
 		void renderScene(const Player& player, const Map& map, float elapsedTime);
 
 		// getters
-		int getScreenWidth() const;
-		int getSceenHeight() const;
 		float getRayDepth() const;
 		float getBoundaryAngle() const;
 		float getDistanceToWallIncrement() const;
@@ -46,10 +39,9 @@ namespace CMD_3D_ENGINE
 		void castRays(const Player& player, const Map& map);
 		void checkHit(const Vec2D& playerPos, const Map& map);
 		void checkBoundary(int rayX, int rayY, const Vec2D& playerPos);
-		void drawLevel(int x);
-		void drawStats(const Player& player, float elapsedTime);
-		void drawMinimap(const Map& map, const Vec2D& playerPos);
-		void drawFrame();
+		void renderLevel(int x);
+		void showMinimap(const Map& map, const Vec2D& playerPos);
+		void updateWindowTitle(const Player& player, float elapsedTime);
 	};
 }
 
