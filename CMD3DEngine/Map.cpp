@@ -46,10 +46,10 @@ wchar_t Map::getCell(int x, int y) const
     return world[y * width + x];
 }
 
-void Map::setCell(int x, int y, wchar_t val)
+void Map::setCell(int x, int y, wchar_t c)
 {
     checkCoords(x, y);
-    world[y * width + x] = val;
+    world[y * width + x] = c;
 }
 
 bool Map::isWall(int x, int y) const

@@ -3,6 +3,7 @@
 #include "Entity.h"
 #include "IOHandler.h"
 #include "Map.h"
+#include "Projectile.h"
 
 namespace CMD_3D_ENGINE
 {
@@ -11,11 +12,12 @@ namespace CMD_3D_ENGINE
 	private:
 		const Map& map;
 	public:
-		Player(const Map &map, float x, float y, float viewAngle);
+		Player(const Vec2D position, const Map& map, float viewAngle);
 		void handleControls(IOHandler& ioh, float elapsedTime);
 	private:
 		void move(const IOHandler& ioh, float elapsedTime);
 		void rotate(const IOHandler& ioh, float elapsedTime);
+		//void fire(const IOHandler& ioh, float elapsedTime);
 	};
 }
 

@@ -1,7 +1,5 @@
 #include "IOHandler.h"
 
-#include <stdexcept>
-
 using namespace CMD_3D_ENGINE;
 
 IOHandler::IOHandler(int screenWidth, int screenHeight, int fontWidth, int fontHeight)
@@ -35,7 +33,7 @@ IOHandler::IOHandler(int screenWidth, int screenHeight, int fontWidth, int fontH
 	}
 
 	// set font size
-	CONSOLE_FONT_INFOEX cfi;
+	CONSOLE_FONT_INFOEX cfi{};
 	cfi.cbSize = sizeof(cfi);
 	cfi.nFont = 0;
 	cfi.dwFontSize.X = fontWidth;
@@ -68,7 +66,7 @@ IOHandler::IOHandler(int screenWidth, int screenHeight, int fontWidth, int fontH
 	}
 
 	// allocate screen buffer
-	buffer = new CHAR_INFO[screenWidth * screenHeight];
+	buffer = std::make_unique<CHAR_INFO[]>(screenWidth * screenHeight);
 	for (int i = 0; i < screenWidth * screenHeight; ++i) {
 		memset(&buffer[i], 0, sizeof(buffer[i]));
 	}
@@ -97,23 +95,35 @@ IOHandler::IOHandler(int screenWidth, int screenHeight, int fontWidth, int fontH
 	}
 }
 
-void IOHandler::draw(int x, int y, short c, short color)
+void IOHandler::drawGlyph(int x, int y, wchar_t c, wchar_t color)
 {
 	checkCoords(x, y);
-	buffer[y * screenWidth + x].Char.UnicodeChar = c;
-	buffer[y * screenWidth + x].Attributes = color;
+	buffer[static_cast<size_t>(y) * screenWidth + x].Char.UnicodeChar = c;
+	buffer[static_cast<size_t>(y) * screenWidth + x].Attributes = color;
+}
+
+void IOHandler::drawSprite(int x, int y, const Sprite& sprite)
+{
+	checkCoords(x, y);
+	for (int i = 0; i < sprite.getWidth(); ++i) {
+		for (int j = 0; j < sprite.getHeight(); ++j) {
+			if (sprite.getGlyph(i, j) != Sprite::BLANK_GLYPH) {
+				drawGlyph(x, y, sprite.getGlyph(i, j), sprite.getColor(i, j));
+			}
+		}
+	}
 }
 
 void IOHandler::setWindowTitle(const wchar_t* title)
 {
-	if (title) {
+	if (title != nullptr) {
 		SetConsoleTitle(title);
 	}
 }
 
 void IOHandler::updateScreenBuffer()
 {
-	WriteConsoleOutput(consoleOut, buffer, { (short)screenWidth, (short)screenHeight }, { 0,0 }, &rectWindow);
+	WriteConsoleOutput(consoleOut, buffer.get(), {(short)screenWidth, (short)screenHeight}, {0,0}, &rectWindow);
 }
 
 void IOHandler::readInput()
@@ -164,8 +174,14 @@ int IOHandler::getFontenWidth() const
 
 void IOHandler::checkCoords(int x, int y) const
 {
-	if (x < 0 || x >= screenWidth || y < 0 || y >= screenHeight) {
-		throw std::out_of_range("Invalid draw coordinates");
+	if (x < 0) {
+		error(L"Invalid screen X coord: too small");
+	} else if (x >= screenWidth) {
+		error(L"Invalid screen X coord: too large");
+	} else if (y < 0) {
+		error(L"Invalid screen Y coord: too small");
+	} else if (y >= screenHeight) {
+		error(L"Invalid screen Y coord: too large");
 	}
 }
 

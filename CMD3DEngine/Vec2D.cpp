@@ -48,7 +48,7 @@ void Vec2D::setY(float y)
 
 float Vec2D::magnitude() const
 {
-	return std::sqrt(x * x + y * y);
+	return sqrtf(x * x + y * y);
 }
 
 Vec2D Vec2D::operator+(const Vec2D& right) const

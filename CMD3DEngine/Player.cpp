@@ -2,7 +2,7 @@
 
 using namespace CMD_3D_ENGINE;
 
-Player::Player(const Map& map, float x, float y, float viewAngle) : Entity(x, y, viewAngle), map(map)
+Player::Player(const Vec2D position, const Map& map, float viewAngle) : Entity(position, viewAngle), map(map)
 {
 }
 

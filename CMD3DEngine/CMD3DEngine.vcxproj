@@ -18,6 +18,36 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="resources\sprites\fireball.spr" />
+    <None Include="resources\sprites\lamp.spr" />
+    <None Include="resources\sprites\wall.spr" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Entity.h" />
+    <ClInclude Include="FrameTimer.h" />
+    <ClInclude Include="IOHandler.h" />
+    <ClInclude Include="Map.h" />
+    <ClInclude Include="Object.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="Projectile.h" />
+    <ClInclude Include="Renderer.h" />
+    <ClInclude Include="Sprite.h" />
+    <ClInclude Include="Vec2D.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="CMD3DEngine.cpp" />
+    <ClCompile Include="Entity.cpp" />
+    <ClCompile Include="FrameTimer.cpp" />
+    <ClCompile Include="IOHandler.cpp" />
+    <ClCompile Include="Map.cpp" />
+    <ClCompile Include="Object.cpp" />
+    <ClCompile Include="Player.cpp" />
+    <ClCompile Include="Projectile.cpp" />
+    <ClCompile Include="Renderer.cpp" />
+    <ClCompile Include="Sprite.cpp" />
+    <ClCompile Include="Vec2D.cpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -126,25 +156,6 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClCompile Include="CMD3DEngine.cpp" />
-    <ClCompile Include="Entity.cpp" />
-    <ClCompile Include="FrameTimer.cpp" />
-    <ClCompile Include="Map.cpp" />
-    <ClCompile Include="Player.cpp" />
-    <ClCompile Include="IOHandler.cpp" />
-    <ClCompile Include="Renderer.cpp" />
-    <ClCompile Include="Vec2D.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="Entity.h" />
-    <ClInclude Include="FrameTimer.h" />
-    <ClInclude Include="Map.h" />
-    <ClInclude Include="Player.h" />
-    <ClInclude Include="IOHandler.h" />
-    <ClInclude Include="Renderer.h" />
-    <ClInclude Include="Vec2D.h" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

@@ -2,8 +2,10 @@
 
 #include <Windows.h>
 #include <string>
+#include <memory>
 
 #include "Vec2D.h"
+#include "Sprite.h"
 
 namespace CMD_3D_ENGINE
 {
@@ -27,9 +29,9 @@ namespace CMD_3D_ENGINE
 	class IOHandler
 	{
 	private:
-		static constexpr unsigned short KEY_STATE_MASK = 0x8000;
-		static constexpr unsigned char NUM_KEYS = 255;
-		static constexpr unsigned char NUM_MOUSE = 5;
+		static constexpr int KEY_STATE_MASK = 0x8000;
+		static constexpr int NUM_KEYS = 255;
+		static constexpr int NUM_MOUSE = 5;
 
 		const int screenWidth;
 		const int screenHeight;
@@ -42,7 +44,7 @@ namespace CMD_3D_ENGINE
 
 		SMALL_RECT rectWindow;
 
-		CHAR_INFO* buffer;
+		std::unique_ptr<CHAR_INFO[]> buffer;
 
 		keyState keys[NUM_KEYS];
 		keyState mouse[NUM_MOUSE];
@@ -58,7 +60,8 @@ namespace CMD_3D_ENGINE
 		IOHandler(int screenWidth, int screenHeight, int fontWidth, int fontHeight);
 
 		// output
-		void draw(int x, int y, short c, short color = 0x000F);
+		void drawGlyph(int x, int y, wchar_t c, wchar_t color = 0x000F);
+		void drawSprite(int x, int y, const Sprite& sprite);
 		void setWindowTitle(const wchar_t* title);
 		void updateScreenBuffer();
 

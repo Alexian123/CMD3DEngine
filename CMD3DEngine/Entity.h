@@ -14,7 +14,7 @@ namespace CMD_3D_ENGINE
 		float movementSpeed = 5.0f;
 		float strafingSpeed = movementSpeed / 2.0f;
 	public:
-		Entity(float x, float y, float viewAngle);
+		Entity(const Vec2D& position, float viewAngle);
 
 		// getters
 		const Vec2D& getPosition() const;
@@ -25,7 +25,6 @@ namespace CMD_3D_ENGINE
 		float getStrafingSpeed() const;
 
 		// setters
-		void setPosition(float x, float y);
 		void setPosition(const Vec2D& position);
 		void setViewAngle(float viewAngle);
 		void setFov(float fov);

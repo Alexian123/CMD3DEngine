@@ -2,7 +2,7 @@
 
 using namespace CMD_3D_ENGINE;
 
-Entity::Entity(float x, float y, float viewAngle) : position(x, y), viewAngle(viewAngle)
+Entity::Entity(const Vec2D& position, float viewAngle) : position(position), viewAngle(viewAngle)
 {
 }
 
@@ -34,12 +34,6 @@ float Entity::getMovementSpeed() const
 float Entity::getStrafingSpeed() const
 {
 	return strafingSpeed;
-}
-
-void Entity::setPosition(float x, float y)
-{
-	position.setX(x);
-	position.setY(y);
 }
 
 void Entity::setPosition(const Vec2D& position)
