@@ -44,7 +44,7 @@ int main()
     Map map(16, 16, '#', '.', '@', world);
 
     // player init
-    Player player(Vec2D(8.0f, 8.0f), map, -3.14159f / 2.0f);
+    Player player(Vec2D(8.0f, 8.0f), map, -3.14159f / 2.0f, Sprite(L"./resources/sprites/fireball.spr"));
 
     // objects init
     Object lamp1(Vec2D(8, 9), L"./resources/sprites/lamp.spr");
@@ -57,6 +57,8 @@ int main()
         player.handleControls(ioh, elapsedTime);
         renderer.renderScene(player, map, elapsedTime);
     }
+
+    // TODO: implement ErrorHandler class for global error handling
     
     return 0;
 }

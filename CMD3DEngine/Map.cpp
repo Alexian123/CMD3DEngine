@@ -42,20 +42,25 @@ int Map::getHeight() const
 
 wchar_t Map::getCell(int x, int y) const
 {
-    checkCoords(x, y);
-    return world[y * width + x];
+    if (checkCoords(x, y)) {
+        return world[y * width + x];
+    }
+    return L'\0';
 }
 
 void Map::setCell(int x, int y, wchar_t c)
 {
-    checkCoords(x, y);
-    world[y * width + x] = c;
+    if (checkCoords(x, y)) {
+        world[y * width + x] = c;
+    }
 }
 
 bool Map::isWall(int x, int y) const
 {
-    checkCoords(x, y);
-    return world[y * width + x] == wall;
+    if (checkCoords(x, y)) {
+        return world[y * width + x] == wall;
+    }
+    return true;
 }
 
 wchar_t Map::getPlayerSymbol() const
@@ -63,9 +68,7 @@ wchar_t Map::getPlayerSymbol() const
     return player;
 }
 
-void Map::checkCoords(int x, int y) const
+bool Map::checkCoords(int x, int y) const
 {
-    if (x < 0 || x >= width || y < 0 || y >= height) {
-        throw std::out_of_range("Map coordinates out of bounds");
-    }
+    return x >= 0 && x < width && y >= 0 && y < height;
 }

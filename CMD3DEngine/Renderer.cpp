@@ -17,7 +17,7 @@ Renderer::Renderer(IOHandler& ioh, std::wstring wallSpritePath) : ioh(ioh), wall
 void Renderer::renderScene(const Player& player, const Map& map, float elapsedTime)
 {
     renderLevel(player, map);
-    renderObjects(player);
+    renderObjects(player, map, elapsedTime);
     showMinimap(map, player.getPosition());
     updateWindowTitle(player, elapsedTime);
     ioh.updateScreenBuffer();
@@ -132,11 +132,18 @@ void Renderer::renderLevel(const Player& player, const Map& map)
     }
 }
 
-void Renderer::renderObjects(const Player& player)
+void Renderer::renderObjects(const Player& player, const Map& map, float elapsedTime)
 {
     const std::list<std::shared_ptr<Object>>& objects = Object::getObjectList();
     const Vec2D& playerPos = player.getPosition();
     for (auto& object : objects) {
+        object->updatePhysics(elapsedTime);
+
+        // remove object if inside of a wall
+        if (map.isWall((int)object->getPosition().getX(), (int)object->getPosition().getY())) {
+            object->setRemove(true);
+        }
+
         // determine if object can be seen by the player
         Vec2D difV(object->getPosition().getX() - playerPos.getX(), object->getPosition().getY() - playerPos.getY());
         float distanceFromPlayer = difV.magnitude();
@@ -197,7 +204,7 @@ void Renderer::updateWindowTitle(const Player& player, float elapsedTime)
 {
     static constexpr int MAX_LEN = 256; 
     wchar_t title[MAX_LEN];
-    swprintf_s(title, MAX_LEN, L"CMD3DEngine - STATS: FPS=%3.2f, X=%3.2f, Y=%3.2f, A=%3.2f", 1.0 / elapsedTime,
-        player.getPosition().getX(), player.getPosition().getY(), player.getViewAngle());
+    swprintf_s(title, MAX_LEN, L"CMD3DEngine - STATS: FPS=%3.2f, X=%3.2f, Y=%3.2f, A=%3.2f*PI", 1.0 / elapsedTime,
+        player.getPosition().getX(), player.getPosition().getY(), player.getViewAngle() / PI_F);
     ioh.setWindowTitle(title);
 }

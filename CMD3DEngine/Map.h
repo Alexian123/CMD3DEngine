@@ -22,11 +22,11 @@ namespace CMD_3D_ENGINE
 		wchar_t getCell(int x, int y) const;
 		void setCell(int x, int y, wchar_t val);
 
-		bool isWall(int x, int y) const;
+		bool isWall(int x, int y) const; // out of bounds == wall
 
 		wchar_t getPlayerSymbol() const;
 	private:
-		void checkCoords(int x, int y) const;
+		bool checkCoords(int x, int y) const;
 	};
 }
 

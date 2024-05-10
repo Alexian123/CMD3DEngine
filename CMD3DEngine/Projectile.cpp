@@ -18,7 +18,7 @@ Projectile::Projectile(const Vec2D& position, const Vec2D& velocity, std::shared
 }
 
 Projectile::Projectile(const Projectile& projectile) 
-    : Object(projectile), velocity(projectile.velocity), removed(projectile.removed)
+    : Object(projectile), velocity(projectile.velocity)
 {
 }
 
@@ -31,9 +31,13 @@ Projectile& Projectile::operator=(const Projectile& right)
     if (this != &right) {
         Object::operator=(right);
         this->velocity = right.velocity;
-        this->removed = right.removed;
     }
     return *this;
+}
+
+void Projectile::updatePhysics(float elapsedTime)
+{
+    position += (velocity * elapsedTime);
 }
 
 const Vec2D& Projectile::getVelocity() const
@@ -41,17 +45,7 @@ const Vec2D& Projectile::getVelocity() const
     return velocity;
 }
 
-bool Projectile::isRemoved() const
-{
-    return removed;
-}
-
 void Projectile::setVelocity(const Vec2D& velocity)
 {
     this->velocity = velocity;
-}
-
-void Projectile::setRemoved(bool removed)
-{
-    this->removed = removed;
 }

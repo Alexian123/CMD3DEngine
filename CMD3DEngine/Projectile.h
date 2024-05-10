@@ -8,7 +8,6 @@ namespace CMD_3D_ENGINE
 	{
 	private:
 		Vec2D velocity;
-		bool removed = false;
 
 	public:
 		Projectile();
@@ -20,11 +19,10 @@ namespace CMD_3D_ENGINE
 
 		Projectile& operator=(const Projectile& right);
 
-		const Vec2D& getVelocity() const;
-		bool isRemoved() const;
+		void updatePhysics(float elapsedTime) override;
 
+		const Vec2D& getVelocity() const;
 		void setVelocity(const Vec2D& velocity);
-		void setRemoved(bool removed);
 	};
 
 

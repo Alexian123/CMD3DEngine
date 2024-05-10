@@ -42,7 +42,7 @@ namespace CMD_3D_ENGINE
 
 	private:
 		void renderLevel(const Player& player, const Map& map);
-		void renderObjects(const Player& player);
+		void renderObjects(const Player& player, const Map& map, float elapsedTime);
 		void showMinimap(const Map& map, const Vec2D& playerPos);
 		void updateWindowTitle(const Player& player, float elapsedTime);
 	};

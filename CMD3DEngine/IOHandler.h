@@ -12,7 +12,7 @@ namespace CMD_3D_ENGINE
 	enum KeyboardKey
 	{
 		W_KEY = 'W', A_KEY = 'A', S_KEY = 'S', D_KEY = 'D',
-		Q_KEY = 'Q', E_KEY = 'E'
+		Q_KEY = 'Q', E_KEY = 'E', SPACE_KEY = VK_SPACE
 	};
 
 	enum MouseBtn
